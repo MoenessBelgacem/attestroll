@@ -8,11 +8,12 @@ COMP = [{"name": "mbedtls", "version": "3.4.0"}]
 
 
 class Local:
-    """In-process hub so tests run without HTTP."""
+    """In-process hub so tests run without HTTP (HTTP auth is covered in test_identity)."""
     def __init__(self, st): self.st = st
-    def register(self, **kw): self.st.register(kw["id"], kw["hw"], kw["group"], kw["product"], kw["version"])
-    def desired(self, d): return self.st.desired(d) or {"up_to_date": True}
-    def report(self, d, r, s, det=""): self.st.report(d, r, s, det)
+    def enroll(self, **kw):
+        self.st.enroll(kw["id"], kw["token"], kw["pubkey"], kw["hw"], kw["group"], kw["product"], kw["version"])
+    def desired(self, ident): return self.st.desired(ident[0]) or {"up_to_date": True}
+    def report(self, ident, r, s, det=""): self.st.report(ident[0], r, s, det)
 
 
 def fleet(n=100):
@@ -22,7 +23,8 @@ def fleet(n=100):
     hub = Local(st)
     m, s, a = build_release(priv, "p", "1.0.0", b"v1", COMP)
     st.publish(m, s, a)
-    agents = [Agent(f"d{i}", "b" if i % 2 else "a", hub, pub, product="p") for i in range(n)]
+    agents = [Agent(f"d{i}", "b" if i % 2 else "a", hub, pub, st.create_enrollment_token(f"d{i}"), product="p")
+              for i in range(n)]
     return priv, pub, st, agents
 
 

@@ -1,4 +1,4 @@
-# Fleetproof (nom de travail) - prototype v0.1
+# Fleetproof (nom de travail) - prototype v0.2
 
 **Mettre à jour une flotte d'appareils IoT en sécurité, et en garder la preuve.**
 
@@ -12,8 +12,8 @@ requête d'exposition aux vulnérabilités et journal d'audit infalsifiable.
 
 ```bash
 pip install cryptography        # seule dépendance
-python -m unittest tests.test_core -v
-python demo.py                  # flotte de 200 appareils simulés, 4 scénarios
+python -m unittest discover -s tests -v
+python demo.py                  # flotte de 200 appareils simulés, 7 scénarios
 ```
 
 ## Ce que le prototype démontre
@@ -26,7 +26,11 @@ python demo.py                  # flotte de 200 appareils simulés, 4 scénarios
 | Arrêt automatique si le taux d'échec dépasse le seuil | `state.py` | scénario 2 : arrêt dès le canari |
 | Retour arrière des appareils déjà mis à jour | `state.py` | scénario 2 |
 | SBOM signé dans chaque version + « qui est exposé à cette bibliothèque ? » | `state.exposure` | scénarios 0 et 1 : 200/200 puis 0/200 |
-| Journal d'audit chaîné par hachage (toute modification est détectée) | `audit.py` | scénario 4 |
+| Journal d'audit chaîné par hachage (toute modification est détectée) | `audit.py` | scénario 6 |
+| Persistance SQLite : un redémarrage ne perd rien, un journal modifié empêche le démarrage | `store.py`, `state.py` | scénario 4 + `test_persistence.py` |
+| Identité par appareil : clé privée générée sur l'appareil, enrôlement par jeton à usage unique | `agent.py`, `state.py` | scénario 5 |
+| Requêtes signées (identité, verbe, URL, heure, nonce, corps) : usurpation, rejeu et altération refusés | `crypto.py`, `server.py` | scénario 5 + `test_identity.py` |
+| Révocation d'un appareil (403) et refus consignés dans l'audit | `state.py` | scénario 5 |
 
 ## Lien avec le Cyber Resilience Act (CRA) de l'UE
 
@@ -40,12 +44,18 @@ juristes et les textes à jour avant toute promesse commerciale.
 
 ## Limites connues (honnêtes)
 
-- Prototype : pas de TLS, jeton admin statique, tout en mémoire (pas de base de données).
+- **Pas de TLS** : le serveur parle en HTTP simple. Un vrai déploiement doit placer TLS devant lui. Les signatures protègent l'identité et l'intégrité, pas la confidentialité.
+- Jeton admin unique et statique (à remplacer par des comptes, des rôles et une authentification forte).
+- Le jeton d'enrôlement doit être remis à l'appareil par un canal sûr, hors du hub (atelier de production, par exemple). Ce canal n'est pas modélisé.
+- Le cache anti-rejeu (nonces) est en mémoire : après un redémarrage, un rejeu reste possible pendant la fenêtre de 5 minutes.
+- Pas de rotation de clés d'appareil ni de clé de publication.
+- SQLite sur un seul serveur : pas de haute disponibilité. L'état d'un déploiement est réécrit en entier à chaque rapport, ce qui ne tiendra pas à des milliers d'appareils sans refonte du stockage.
+- Une panne du processus au milieu d'une opération laisse la base cohérente (transactions), mais l'état en mémoire n'est pas rechargé automatiquement après une exception.
+- Dans la simulation, la clé privée de l'appareil est en mémoire ; sur un vrai appareil elle doit être en stockage protégé.
 - Appareils simulés : pas de vrai firmware, pas de partitions A/B ni de bootloader.
 - Le contrôle de santé est une simulation ; en réel, c'est la partie la plus difficile.
 - SBOM simplifié écrit à la main ; en réel, il doit être généré automatiquement à la compilation.
 - Le seuil d'échec est cumulatif et simple ; une vraie plateforme aura des critères par groupe.
-- Pas d'authentification par appareil (à faire : certificats par appareil).
 - Aucune donnée de marché ni de demande client n'est validée par ce code.
 
 ## Feuille de route : 12 semaines
@@ -55,7 +65,7 @@ juristes et les textes à jour avant toute promesse commerciale.
 | 1 | Agent ESP32 : mise à jour HTTPS avec retour arrière (fonction de rollback d'ESP-IDF, à vérifier dans la doc Espressif) | 1 carte se met à jour et revient seule sur un firmware volontairement cassé |
 | 2 | Vérification de la signature Ed25519 sur l'ESP32 | une image non signée est refusée |
 | 3 | Agent Linux (Raspberry Pi) | mise à jour signée + retour arrière |
-| 4 | Base SQLite, TLS, identité par appareil, rotation de clés | plus aucun état perdu au redémarrage |
+| 4 | ~~Base SQLite, identité par appareil~~ (fait en v0.2) ; reste : TLS, rotation de clés | TLS actif, clé tournée sans perdre de flotte |
 | 5-6 | CLI + GitHub Action de publication, génération automatique du SBOM | `git tag` → version signée publiée |
 | 7 | Tableau de bord minimal | on voit versions, déploiements, exposition |
 | 8 | Documentation, vidéo de démo de 2 min, page de présentation | un inconnu réussit l'installation seul |

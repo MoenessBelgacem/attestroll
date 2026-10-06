@@ -38,3 +38,21 @@ def verify_manifest(pub, manifest: dict, signature_b64: str) -> bool:
         return True
     except (InvalidSignature, ValueError):
         return False
+
+
+# ---- per-device request authentication ---------------------------------------
+def request_message(device_id: str, method: str, target: str, ts: int, nonce: str, body: bytes) -> bytes:
+    """Exact bytes a device signs: binds identity, verb, URL, time, nonce and body."""
+    return f"{device_id}\n{method}\n{target}\n{ts}\n{nonce}\n{sha256_hex(body)}".encode()
+
+
+def sign_bytes(priv, data: bytes) -> str:
+    return base64.b64encode(priv.sign(data)).decode()
+
+
+def verify_bytes(pub, data: bytes, signature_b64: str) -> bool:
+    try:
+        pub.verify(base64.b64decode(signature_b64), data)
+        return True
+    except (InvalidSignature, ValueError):
+        return False
