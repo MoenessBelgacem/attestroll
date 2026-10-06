@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Moeness Belgacem
 """HTTP API around FleetState (stdlib only).
 Auth model:
   - admin endpoints  : 'Authorization: Bearer <admin token>'

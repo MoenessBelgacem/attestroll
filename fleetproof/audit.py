@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Moeness Belgacem
 """Append-only audit log. Each entry includes the hash of the previous one, so any
 later modification of history is detectable (tamper-evident)."""
 import datetime, json

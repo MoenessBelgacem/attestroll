@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Moeness Belgacem
 """SQLite persistence (stdlib only). Everything the hub must not lose on restart.
 Writes are grouped in transactions via `with store.tx():` so a state change and its
 audit entry are committed together or not at all."""

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Moeness Belgacem
 #include "esp_log.h"
 #include "esp_ota_ops.h"
 #include "esp_app_desc.h"

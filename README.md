@@ -1,82 +1,80 @@
-# Fleetproof (nom de travail) - prototype v0.2
+# Fleetproof (working name)
 
-**Mettre à jour une flotte d'appareils IoT en sécurité, et en garder la preuve.**
+**Update IoT device fleets safely - and keep the evidence.**
 
-Prototype fonctionnel du cœur du produit : hub de déploiement + agent d'appareil simulé,
-avec signatures, déploiement progressif, arrêt et retour arrière automatiques, SBOM par version,
-requête d'exposition aux vulnérabilités et journal d'audit infalsifiable.
+An early, open-source prototype of an over-the-air (OTA) update hub for connected devices.
+It combines signed releases, staged rollouts with automatic halt and rollback, per-device identity,
+and a tamper-evident audit trail that records which version ran on which device and when.
 
-> Le nom est provisoire : aucune vérification de disponibilité ou de marque n'a été faite.
+> **Status: prototype, not production software.** The hub is simulated against 200 virtual devices.
+> There is an ESP32 firmware skeleton that builds, but it has not yet been flashed to hardware
+> or connected to the hub. See [Limitations](#limitations). Not ready to protect real devices.
 
-## Lancer
+## Why this exists (and what we have not proven)
+
+Updating devices in the field is risky: a failed update can leave a device unusable, and new
+regulation (for example the EU Cyber Resilience Act) expects manufacturers to handle
+vulnerabilities, ship security updates and keep documentation such as a software bill of materials.
+
+**Established alternatives exist.** Mender, balena and Qbee, among others, already offer OTA
+updates and fleet management; Mender states on its site that it supports CRA compliance
+for Linux and real-time systems. We have not benchmarked them. We do not claim to be unique or
+better; this project is published to find out whether a simpler, auditable, evidence-first
+approach is useful to small hardware teams. **If you build connected products, your feedback is
+the most valuable contribution: see [CONTRIBUTING.md](CONTRIBUTING.md).**
+
+## What works today
+
+| Capability | Where | Demonstrated by |
+|---|---|---|
+| Releases signed with Ed25519; the private key never touches the hub | `fleetproof/crypto.py`, `publisher.py` | `demo.py` scenario 3 |
+| Devices verify signature and hash themselves against a pinned public key | `fleetproof/agent.py` | a compromised hub cannot push a swapped image |
+| Staged rollout (5% > 25% > 100%) with automatic halt on failures | `fleetproof/state.py` | scenario 2 |
+| Automatic pull-back of devices that already took a halted release | `fleetproof/state.py` | scenario 2 |
+| SBOM inside each signed release; "which devices run component X at version Y?" | `fleetproof/state.py` | scenarios 0-1 |
+| SQLite persistence; a restart loses nothing; a tampered database refuses to start | `fleetproof/store.py` | scenario 4, `tests/test_persistence.py` |
+| Per-device keys, single-use enrollment tokens, signed requests (replay and tampering rejected), revocation | `fleetproof/server.py`, `state.py` | scenario 5, `tests/test_identity.py` |
+| Hash-chained audit log (any edit to history is detected) | `fleetproof/audit.py` | scenario 6 |
+| ESP32 firmware skeleton: two OTA slots, rollback enabled, builds with ESP-IDF 6.1 | `firmware/fleet_agent/` | build only, not flashed |
+
+## Quick start
+
+Requires Python 3.10+ and one dependency.
 
 ```bash
-pip install cryptography        # seule dépendance
-python -m unittest discover -s tests -v
-python demo.py                  # flotte de 200 appareils simulés, 7 scénarios
+pip install cryptography
+python -m unittest discover -s tests -v    # 20 tests
+python demo.py                             # 200 simulated devices, 7 scenarios
 ```
 
-## Ce que le prototype démontre
+## Limitations
 
-| Fonction | Où | Preuve |
-|---|---|---|
-| Versions signées (Ed25519), clé privée côté CI uniquement | `crypto.py`, `publisher.py` | le serveur et les appareils n'ont que la clé publique |
-| Les appareils vérifient signature + hash eux-mêmes | `agent.py` | scénario 3 : un serveur compromis ne peut pas imposer une image modifiée |
-| Déploiement progressif 5 % → 25 % → 100 % | `state.py` | scénario 1 |
-| Arrêt automatique si le taux d'échec dépasse le seuil | `state.py` | scénario 2 : arrêt dès le canari |
-| Retour arrière des appareils déjà mis à jour | `state.py` | scénario 2 |
-| SBOM signé dans chaque version + « qui est exposé à cette bibliothèque ? » | `state.exposure` | scénarios 0 et 1 : 200/200 puis 0/200 |
-| Journal d'audit chaîné par hachage (toute modification est détectée) | `audit.py` | scénario 6 |
-| Persistance SQLite : un redémarrage ne perd rien, un journal modifié empêche le démarrage | `store.py`, `state.py` | scénario 4 + `test_persistence.py` |
-| Identité par appareil : clé privée générée sur l'appareil, enrôlement par jeton à usage unique | `agent.py`, `state.py` | scénario 5 |
-| Requêtes signées (identité, verbe, URL, heure, nonce, corps) : usurpation, rejeu et altération refusés | `crypto.py`, `server.py` | scénario 5 + `test_identity.py` |
-| Révocation d'un appareil (403) et refus consignés dans l'audit | `state.py` | scénario 5 |
+- **No TLS.** The server speaks plain HTTP; signatures protect identity and integrity, not confidentiality. Put TLS in front of it.
+- Single static admin token, single node (SQLite), no key rotation, no roles or users.
+- The replay-protection cache lives in memory (replays are possible for the 5-minute window after a restart).
+- Enrollment tokens must be delivered to devices through a trusted channel that is not modelled here.
+- Devices are simulated. The health check is a stub; the real one is the hard part.
+- The SBOM is hand-written in the demo; a real one must be generated at build time.
+- The ESP32 agent does not yet talk to the hub.
+- Deployment state is rewritten in full on each report: this will not scale to thousands of devices without a storage redesign.
+- **Nothing here is legal advice or a guarantee of regulatory compliance.** The project can help
+  produce evidence (installed version per device, signed history, exposure per component); whether it
+  satisfies any regulation is for you and your advisers to determine.
 
-## Lien avec le Cyber Resilience Act (CRA) de l'UE
+## Roadmap
 
-Le CRA impose aux fabricants de traiter les vulnérabilités, de fournir des mises à jour de
-sécurité pendant une période de support et de tenir une documentation technique avec SBOM.
-Ce prototype produit des **éléments de preuve** pour ces obligations (version installée par
-appareil, historique signé, exposition par composant, date de fin de support dans le manifeste).
+1. ESP32 agent: HTTPS update with bootloader rollback, then verification of the Ed25519 signature on-device.
+2. Linux agent (Raspberry Pi class).
+3. TLS, secret handling from the environment, key rotation.
+4. CI action that signs releases and generates the SBOM at build time.
+5. Minimal dashboard.
 
-**Ce n'est pas un avis juridique et ça ne garantit aucune conformité.** À valider avec des
-juristes et les textes à jour avant toute promesse commerciale.
+## License
 
-## Limites connues (honnêtes)
+Licensed per component. Code that runs on devices or in your build pipeline (device agent,
+firmware, signing tools) is **Apache-2.0**; the hub (server) is **AGPL-3.0-only**. See
+[LICENSE](LICENSE), the [LICENSES/](LICENSES/) folder, and the SPDX header at the top of each file.
+The author may offer the hub under a separate commercial license. The name "Fleetproof" is a working
+name; no trademark clearance has been done.
 
-- **Pas de TLS** : le serveur parle en HTTP simple. Un vrai déploiement doit placer TLS devant lui. Les signatures protègent l'identité et l'intégrité, pas la confidentialité.
-- Jeton admin unique et statique (à remplacer par des comptes, des rôles et une authentification forte).
-- Le jeton d'enrôlement doit être remis à l'appareil par un canal sûr, hors du hub (atelier de production, par exemple). Ce canal n'est pas modélisé.
-- Le cache anti-rejeu (nonces) est en mémoire : après un redémarrage, un rejeu reste possible pendant la fenêtre de 5 minutes.
-- Pas de rotation de clés d'appareil ni de clé de publication.
-- SQLite sur un seul serveur : pas de haute disponibilité. L'état d'un déploiement est réécrit en entier à chaque rapport, ce qui ne tiendra pas à des milliers d'appareils sans refonte du stockage.
-- Une panne du processus au milieu d'une opération laisse la base cohérente (transactions), mais l'état en mémoire n'est pas rechargé automatiquement après une exception.
-- Dans la simulation, la clé privée de l'appareil est en mémoire ; sur un vrai appareil elle doit être en stockage protégé.
-- Appareils simulés : pas de vrai firmware, pas de partitions A/B ni de bootloader.
-- Le contrôle de santé est une simulation ; en réel, c'est la partie la plus difficile.
-- SBOM simplifié écrit à la main ; en réel, il doit être généré automatiquement à la compilation.
-- Le seuil d'échec est cumulatif et simple ; une vraie plateforme aura des critères par groupe.
-- Aucune donnée de marché ni de demande client n'est validée par ce code.
-
-## Feuille de route : 12 semaines
-
-| Sem. | Objectif | Critère de réussite |
-|---|---|---|
-| 1 | Agent ESP32 : mise à jour HTTPS avec retour arrière (fonction de rollback d'ESP-IDF, à vérifier dans la doc Espressif) | 1 carte se met à jour et revient seule sur un firmware volontairement cassé |
-| 2 | Vérification de la signature Ed25519 sur l'ESP32 | une image non signée est refusée |
-| 3 | Agent Linux (Raspberry Pi) | mise à jour signée + retour arrière |
-| 4 | ~~Base SQLite, identité par appareil~~ (fait en v0.2) ; reste : TLS, rotation de clés | TLS actif, clé tournée sans perdre de flotte |
-| 5-6 | CLI + GitHub Action de publication, génération automatique du SBOM | `git tag` → version signée publiée |
-| 7 | Tableau de bord minimal | on voit versions, déploiements, exposition |
-| 8 | Documentation, vidéo de démo de 2 min, page de présentation | un inconnu réussit l'installation seul |
-| 9 | Lancement public + 10 entretiens avec des fabricants concernés par le CRA | 20 installations, 5 utilisateurs actifs |
-| 10-12 | 3 partenaires de conception, test de prix, solution d'encaissement international | 1 client qui paie |
-
-## Questions d'entretien (fabricants de produits connectés vendus dans l'UE)
-
-1. Comment mettez-vous à jour vos appareils aujourd'hui ?
-2. Comment comptez-vous prouver vos mises à jour de sécurité d'ici 2027 ?
-3. Une mise à jour ratée vous est-elle déjà arrivée ? Coût ?
-4. Savez-vous quels composants logiciels tournent sur chaque appareil vendu ?
-5. Qu'avez-vous essayé, et pourquoi avez-vous arrêté ?
-6. Que paieriez-vous, et sous quelle forme (par appareil, par mois) ?
+A French README is available in [README.fr.md](README.fr.md).

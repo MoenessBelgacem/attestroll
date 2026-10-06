@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Moeness Belgacem
 import unittest, sys, os, tempfile, sqlite3, json
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from fleetproof.crypto import generate_keypair, pub_to_b64

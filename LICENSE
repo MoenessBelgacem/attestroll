@@ -1,0 +1,18 @@
+Fleetproof is licensed per component. The full legal texts are in the LICENSES/ folder.
+Every source file carries an SPDX-License-Identifier header; that header is authoritative.
+
+Apache License 2.0  (LICENSES/Apache-2.0.txt) - code meant to run on devices or in the
+manufacturer's own build pipeline, so it can be embedded in closed firmware without obligations:
+  - firmware/                  (ESP32 reference agent)
+  - fleetproof/agent.py        (reference device agent)
+  - fleetproof/crypto.py       (signing and request-authentication helpers)
+  - fleetproof/publisher.py    (release signing tool, runs in CI)
+
+GNU Affero General Public License v3.0 only  (LICENSES/AGPL-3.0-only.txt) - the hub (server):
+  - fleetproof/state.py, server.py, store.py, audit.py, __init__.py
+  - demo.py and tests/
+
+Copyright (c) 2026 Moeness Belgacem.
+The author may offer the AGPL-licensed components under a separate commercial license.
+The project name and logo are not covered by these licenses (no trademark grant).
+This file is a summary, not legal advice.

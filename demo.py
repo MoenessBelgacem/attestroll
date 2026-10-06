@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Moeness Belgacem
 """End-to-end demo: 200 simulated devices with their own keys, persistent hub. Run: python demo.py"""
 import os, shutil, tempfile, time
 from fleetproof.crypto import generate_keypair, pub_to_b64

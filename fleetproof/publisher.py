@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2026 Moeness Belgacem
 """Publisher side (runs in CI, holds the private key)."""
 import datetime
 from .crypto import sign_manifest, sha256_hex

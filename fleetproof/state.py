@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Moeness Belgacem
 """Control-plane logic (no networking): identity, registry, releases, staged rollouts, audit.
 State lives in SQLite (see store.py); dicts below are an in-memory cache loaded at startup."""
 import base64, hashlib, math, secrets, threading, time

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2026 Moeness Belgacem
 """Ed25519 signing of release manifests. The PRIVATE key stays with the publisher (CI);
 the server and the devices only hold the PUBLIC key."""
 import base64, hashlib, json

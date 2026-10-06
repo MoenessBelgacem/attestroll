@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2026 Moeness Belgacem
 """Simulated device agent. Mirrors what a real agent must do:
   0. own a private key generated ON the device; enroll once with a single-use token
   1. sign every request to the hub   2. verify release signature + hash with a PINNED public key
