@@ -45,6 +45,7 @@ Requires Python 3.10+ and one dependency.
 pip install cryptography
 python -m unittest discover -s tests -v    # 20 tests
 python demo.py                             # 200 simulated devices, 7 scenarios
+python demo.py --step                      # same, pausing between scenes (for screen recording)
 ```
 
 ## Limitations

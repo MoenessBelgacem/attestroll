@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # Copyright (c) 2026 Moeness Belgacem
 """End-to-end demo: 200 simulated devices with their own keys, persistent hub. Run: python demo.py"""
-import os, shutil, tempfile, time
+import os, shutil, sys, tempfile, time
 from fleetproof.crypto import generate_keypair, pub_to_b64
 from fleetproof.state import FleetState
 from fleetproof.store import Store
@@ -55,7 +55,12 @@ def run_rollout(version, label):
     print(f"  -> fleet now: {hub.status()['by_version']}")
 
 
+STEP = "--step" in sys.argv          # pause between scenes (handy for screen recording)
+
+
 def title(t):
+    if STEP:
+        input("\n[press Enter for the next scene] ")
     print(f"\n=== {t} " + "=" * max(0, 70 - len(t)))
 
 
