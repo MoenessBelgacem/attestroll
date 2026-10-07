@@ -2,12 +2,12 @@
 # Copyright (c) 2026 Moeness Belgacem
 """End-to-end demo: 200 simulated devices with their own keys, persistent hub. Run: python demo.py"""
 import os, shutil, sys, tempfile, time
-from fleetproof.crypto import generate_keypair, pub_to_b64
-from fleetproof.state import FleetState
-from fleetproof.store import Store
-from fleetproof.server import make_server
-from fleetproof.agent import HttpHub, Agent
-from fleetproof.publisher import build_release
+from attestroll.crypto import generate_keypair, pub_to_b64
+from attestroll.state import FleetState
+from attestroll.store import Store
+from attestroll.server import make_server
+from attestroll.agent import HttpHub, Agent
+from attestroll.publisher import build_release
 
 ADMIN = "demo-admin-token"            # in real life: a long random secret from the environment
 tmp = tempfile.mkdtemp()

@@ -2,10 +2,10 @@
 # Copyright (c) 2026 Moeness Belgacem
 import unittest, sys, os, tempfile, sqlite3, json
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from fleetproof.crypto import generate_keypair, pub_to_b64
-from fleetproof.state import FleetState, AuthError, FleetError
-from fleetproof.store import Store
-from fleetproof.publisher import build_release
+from attestroll.crypto import generate_keypair, pub_to_b64
+from attestroll.state import FleetState, AuthError, FleetError
+from attestroll.store import Store
+from attestroll.publisher import build_release
 
 COMP = [{"name": "mbedtls", "version": "3.4.0"}]
 

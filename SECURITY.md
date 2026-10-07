@@ -1,6 +1,6 @@
 # Security Policy
 
-Fleetproof is an **early prototype, not production software**. Do not use it to protect real devices.
+Attestroll is an **early prototype, not production software**. Do not use it to protect real devices.
 See the Limitations section of the README (no TLS, static admin token, simulated devices).
 
 ## Reporting a vulnerability

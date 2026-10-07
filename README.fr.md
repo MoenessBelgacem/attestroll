@@ -1,4 +1,4 @@
-# Fleetproof (nom de travail) - prototype v0.2
+# Attestroll (nom de travail) - prototype v0.2
 
 **Mettre à jour une flotte d'appareils IoT en sécurité, et en garder la preuve.**
 

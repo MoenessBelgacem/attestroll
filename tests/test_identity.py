@@ -2,8 +2,8 @@
 # Copyright (c) 2026 Moeness Belgacem
 import unittest, sys, os, time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from fleetproof.crypto import generate_keypair, pub_to_b64, request_message, sign_bytes
-from fleetproof.state import FleetState, AuthError, FleetError
+from attestroll.crypto import generate_keypair, pub_to_b64, request_message, sign_bytes
+from attestroll.state import FleetState, AuthError, FleetError
 
 
 def make():

@@ -2,9 +2,9 @@
 # Copyright (c) 2026 Moeness Belgacem
 import unittest, sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from fleetproof.crypto import generate_keypair, verify_manifest
-from fleetproof.state import FleetState, FleetError
-from fleetproof.publisher import build_release
+from attestroll.crypto import generate_keypair, verify_manifest
+from attestroll.state import FleetState, FleetError
+from attestroll.publisher import build_release
 
 COMP = [{"name": "mbedtls", "version": "3.4.0"}]
 
@@ -19,7 +19,7 @@ class Local:
 
 
 def fleet(n=100):
-    from fleetproof.agent import Agent
+    from attestroll.agent import Agent
     priv, pub = generate_keypair()
     st = FleetState(pub)
     hub = Local(st)
